@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id              String   @id @db.Uuid
+  shortId         String   @unique @map("short_id") @db.VarChar(10)
+  name            String   @db.VarChar(120)
+  email           String   @unique @db.VarChar(255)
+  passwordHash    String   @map("password_hash") @db.VarChar(255)
+  termsAcceptedAt DateTime @map("terms_accepted_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  profile                UserProfile?
+  sentFriendRequests     FriendRequest[] @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedFriendRequests")
+  friendshipsAsUserA     Friendship[]    @relation("FriendshipUserA")
+  friendshipsAsUserB     Friendship[]    @relation("FriendshipUserB")
+  feedback               UserFeedback[]
+
+  @@index([shortId])
+  @@map("users")
+}
+
+enum FeedbackCategory {
+  SUGGESTION
+  BUG
+  OTHER
+}
+
+model UserFeedback {
+  id        String           @id @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  category  FeedbackCategory
+  message   String           @db.VarChar(2000)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@map("user_feedback")
+}
+
+model UserProfile {
+  userId                    String  @id @map("user_id") @db.Uuid
+  instagramHandle           String? @map("instagram_handle") @db.VarChar(30)
+  whatsappPhone             String? @map("whatsapp_phone") @db.VarChar(20)
+  shareInstagramWithFriends Boolean @default(false) @map("share_instagram_with_friends")
+  shareWhatsappWithFriends  Boolean @default(false) @map("share_whatsapp_with_friends")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model FriendRequest {
+  id         String              @id @db.Uuid
+  fromUserId String              @map("from_user_id") @db.Uuid
+  toUserId   String              @map("to_user_id") @db.Uuid
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
+
+  fromUser User @relation("SentFriendRequests", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("ReceivedFriendRequests", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, status])
+  @@index([fromUserId, status])
+  @@map("friend_requests")
+}
+
+model Friendship {
+  id        String   @id @db.Uuid
+  userAId   String   @map("user_a_id") @db.Uuid
+  userBId   String   @map("user_b_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userA User @relation("FriendshipUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("FriendshipUserB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+  @@map("friendships")
+}

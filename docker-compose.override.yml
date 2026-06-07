@@ -1,0 +1,10 @@
+# Mesclado automaticamente pelo Docker Compose em ambiente local.
+# Expõe Postgres e Redis apenas em 127.0.0.1 para ferramentas como DBeaver/DataGrip.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    ports:
+      - "127.0.0.1:6379:6379"
