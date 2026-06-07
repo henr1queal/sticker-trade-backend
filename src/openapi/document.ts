@@ -35,6 +35,14 @@ const stickerCodeParam = {
   schema: { type: 'string' as const, example: 'BRA2' },
 };
 
+const opsTokenParam = {
+  name: 'opsToken',
+  in: 'path' as const,
+  required: true,
+  schema: { type: 'string' as const, example: '{OPS_ROUTE_TOKEN}' },
+  description: 'Valor de OPS_ROUTE_TOKEN configurado no servidor',
+};
+
 const errorResponse = (description = 'Erro') => ({
   description,
   content: {
@@ -243,9 +251,9 @@ export const openApiDocument = {
               },
             },
           },
-          '400': errorResponse,
-          '409': errorResponse,
-          '429': errorResponse,
+          '400': errorResponse('Requisição inválida'),
+          '409': errorResponse('Conflito'),
+          '429': errorResponse('Rate limit'),
         },
       },
     },
@@ -269,8 +277,8 @@ export const openApiDocument = {
               },
             },
           },
-          '401': errorResponse,
-          '429': errorResponse,
+          '401': errorResponse('Não autenticado'),
+          '429': errorResponse('Rate limit'),
         },
       },
     },
@@ -302,7 +310,7 @@ export const openApiDocument = {
             },
           },
         },
-        responses: { '204': { description: 'Conta removida' }, '401': errorResponse },
+        responses: { '204': { description: 'Conta removida' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/public/{targetShortId}': {
@@ -315,7 +323,7 @@ export const openApiDocument = {
             description: 'Usuário encontrado',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/PublicUser' } } },
           },
-          '404': errorResponse,
+          '404': errorResponse('Não encontrado'),
         },
       },
     },
@@ -330,7 +338,7 @@ export const openApiDocument = {
             description: 'Coleção de troca',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/PublicCollection' } } },
           },
-          '404': errorResponse,
+          '404': errorResponse('Não encontrado'),
         },
       },
     },
@@ -346,7 +354,7 @@ export const openApiDocument = {
         ],
         responses: {
           '200': { description: 'Catálogo filtrado' },
-          '401': errorResponse,
+          '401': errorResponse('Não autenticado'),
         },
       },
     },
@@ -360,7 +368,7 @@ export const openApiDocument = {
           required: true,
           content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateAlbumBody' } } },
         },
-        responses: { '200': { description: 'Estado atualizado' }, '400': errorResponse, '401': errorResponse },
+        responses: { '200': { description: 'Estado atualizado' }, '400': errorResponse('Requisição inválida'), '401': errorResponse('Não autenticado') },
       },
     },
     '/api/trade/match/{targetShortId}': {
@@ -371,8 +379,8 @@ export const openApiDocument = {
         parameters: [shortIdParam],
         responses: {
           '200': { description: 'Listas iNeedFromThem / theyNeedFromMe' },
-          '401': errorResponse,
-          '404': errorResponse,
+          '401': errorResponse('Não autenticado'),
+          '404': errorResponse('Não encontrado'),
         },
       },
     },
@@ -381,7 +389,7 @@ export const openApiDocument = {
         tags: ['Friends'],
         summary: 'Listar amigos',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
-        responses: { '200': { description: 'Lista de amigos' }, '401': errorResponse },
+        responses: { '200': { description: 'Lista de amigos' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/friends/requests': {
@@ -389,7 +397,7 @@ export const openApiDocument = {
         tags: ['Friends'],
         summary: 'Solicitações de amizade (entrada e saída)',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
-        responses: { '200': { description: 'Solicitações' }, '401': errorResponse },
+        responses: { '200': { description: 'Solicitações' }, '401': errorResponse('Não autenticado') },
       },
       post: {
         tags: ['Friends'],
@@ -401,7 +409,7 @@ export const openApiDocument = {
             'application/json': { schema: { $ref: '#/components/schemas/SendFriendRequestBody' } },
           },
         },
-        responses: { '201': { description: 'Solicitação criada' }, '401': errorResponse, '409': errorResponse },
+        responses: { '201': { description: 'Solicitação criada' }, '401': errorResponse('Não autenticado'), '409': errorResponse('Conflito') },
       },
     },
     '/api/friends/requests/incoming/count': {
@@ -409,7 +417,7 @@ export const openApiDocument = {
         tags: ['Friends'],
         summary: 'Contagem de solicitações pendentes recebidas',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
-        responses: { '200': { description: 'Número de pendentes' }, '401': errorResponse },
+        responses: { '200': { description: 'Número de pendentes' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/friends/relationship/{targetShortId}': {
@@ -418,7 +426,7 @@ export const openApiDocument = {
         summary: 'Status da relação com outro usuário',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [shortIdParam],
-        responses: { '200': { description: 'Status (none, friends, pending, …)' }, '401': errorResponse },
+        responses: { '200': { description: 'Status (none, friends, pending, …)' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/friends/requests/{requestId}/accept': {
@@ -427,7 +435,7 @@ export const openApiDocument = {
         summary: 'Aceitar solicitação',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [requestIdParam],
-        responses: { '200': { description: 'Amizade criada' }, '401': errorResponse, '404': errorResponse },
+        responses: { '200': { description: 'Amizade criada' }, '401': errorResponse('Não autenticado'), '404': errorResponse('Não encontrado') },
       },
     },
     '/api/friends/requests/{requestId}/reject': {
@@ -436,7 +444,7 @@ export const openApiDocument = {
         summary: 'Recusar solicitação',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [requestIdParam],
-        responses: { '204': { description: 'Recusada' }, '401': errorResponse },
+        responses: { '204': { description: 'Recusada' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/friends/requests/{requestId}': {
@@ -445,7 +453,7 @@ export const openApiDocument = {
         summary: 'Cancelar solicitação enviada',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [requestIdParam],
-        responses: { '204': { description: 'Cancelada' }, '401': errorResponse },
+        responses: { '204': { description: 'Cancelada' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/friends/{friendShortId}': {
@@ -454,14 +462,14 @@ export const openApiDocument = {
         summary: 'Detalhe do amigo (match + contatos)',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [friendShortIdParam],
-        responses: { '200': { description: 'Perfil e trocas' }, '401': errorResponse, '403': errorResponse },
+        responses: { '200': { description: 'Perfil e trocas' }, '401': errorResponse('Não autenticado'), '403': errorResponse('Proibido') },
       },
       delete: {
         tags: ['Friends'],
         summary: 'Remover amizade',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [friendShortIdParam],
-        responses: { '204': { description: 'Amizade removida' }, '401': errorResponse },
+        responses: { '204': { description: 'Amizade removida' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/profile/me': {
@@ -469,7 +477,7 @@ export const openApiDocument = {
         tags: ['Profile'],
         summary: 'Meu perfil',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
-        responses: { '200': { description: 'Perfil' }, '401': errorResponse },
+        responses: { '200': { description: 'Perfil' }, '401': errorResponse('Não autenticado') },
       },
       patch: {
         tags: ['Profile'],
@@ -490,7 +498,7 @@ export const openApiDocument = {
             },
           },
         },
-        responses: { '200': { description: 'Perfil atualizado' }, '401': errorResponse },
+        responses: { '200': { description: 'Perfil atualizado' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/feedback': {
@@ -504,7 +512,7 @@ export const openApiDocument = {
             'application/json': { schema: { $ref: '#/components/schemas/CreateFeedbackBody' } },
           },
         },
-        responses: { '201': { description: 'Feedback registrado' }, '401': errorResponse },
+        responses: { '201': { description: 'Feedback registrado' }, '401': errorResponse('Não autenticado') },
       },
     },
     '/api/poi/nearby': {
@@ -513,11 +521,36 @@ export const openApiDocument = {
         summary: 'POIs próximos (geo)',
         security: [{ cookieAuth: [] }, { bearerAuth: [] }],
         parameters: [
-          { name: 'lat', in: 'query', required: true, schema: { type: 'number' } },
-          { name: 'lng', in: 'query', required: true, schema: { type: 'number' } },
+          { name: 'latitude', in: 'query', required: true, schema: { type: 'number' } },
+          { name: 'longitude', in: 'query', required: true, schema: { type: 'number' } },
           { name: 'radiusKm', in: 'query', schema: { type: 'number', default: 5 } },
         ],
-        responses: { '200': { description: 'Lista de POIs' }, '401': errorResponse },
+        responses: { '200': { description: 'Lista de POIs' }, '401': errorResponse('Não autenticado') },
+      },
+    },
+    '/api/poi': {
+      post: {
+        tags: ['POI'],
+        summary: 'Cadastrar POI (ops)',
+        description: 'Requer header `X-Ops-Token` (mesmo guard das rotas ops).',
+        security: [{ opsToken: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'latitude', 'longitude'],
+                properties: {
+                  name: { type: 'string', maxLength: 120 },
+                  latitude: { type: 'number', minimum: -90, maximum: 90 },
+                  longitude: { type: 'number', minimum: -180, maximum: 180 },
+                },
+              },
+            },
+          },
+        },
+        responses: { '201': { description: 'POI criado' }, '404': errorResponse('Não autorizado') },
       },
     },
     '/api/ops/{opsToken}/metrics': {
@@ -526,16 +559,8 @@ export const openApiDocument = {
         summary: 'Métricas por endpoint',
         description: 'Rota só registrada se OPS_ROUTE_TOKEN estiver no .env.',
         security: [{ opsToken: [] }],
-        parameters: [
-          {
-            name: 'opsToken',
-            in: 'path',
-            required: true,
-            schema: { type: 'string' },
-            description: 'Valor de OPS_ROUTE_TOKEN',
-          },
-        ],
-        responses: { '200': { description: 'Métricas agregadas' }, '404': errorResponse },
+        parameters: [opsTokenParam],
+        responses: { '200': { description: 'Métricas agregadas' }, '404': errorResponse('Não encontrado') },
       },
     },
     '/api/ops/{opsToken}/logs': {
@@ -544,22 +569,44 @@ export const openApiDocument = {
         summary: 'Logs recentes de erro',
         security: [{ opsToken: [] }],
         parameters: [
-          { name: 'opsToken', in: 'path', required: true, schema: { type: 'string' } },
+          opsTokenParam,
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 200, default: 100 } },
         ],
-        responses: { '200': { description: 'Logs' }, '404': errorResponse },
+        responses: { '200': { description: 'Logs' }, '404': errorResponse('Não encontrado') },
       },
     },
     '/api/ops/{opsToken}/feedback': {
       get: {
         tags: ['Ops'],
-        summary: 'Feedback dos usuários',
+        summary: 'Feedback dos usuários (admin)',
         security: [{ opsToken: [] }],
         parameters: [
-          { name: 'opsToken', in: 'path', required: true, schema: { type: 'string' } },
+          opsTokenParam,
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 100, default: 50 } },
         ],
-        responses: { '200': { description: 'Lista de feedback' }, '404': errorResponse },
+        responses: { '200': { description: 'Lista de feedback' }, '404': errorResponse('Não encontrado') },
+      },
+    },
+    '/api/ops/{opsToken}/debug/error': {
+      get: {
+        tags: ['Ops'],
+        summary: 'Simular erro (debug)',
+        description: 'Gera 404, 409, 429 ou 500 para testar observabilidade.',
+        security: [{ opsToken: [] }],
+        parameters: [
+          opsTokenParam,
+          {
+            name: 'type',
+            in: 'query',
+            schema: { type: 'string', enum: ['404', '409', '429', '500'], default: '500' },
+          },
+        ],
+        responses: {
+          '404': errorResponse('Simulado'),
+          '409': errorResponse('Simulado'),
+          '429': errorResponse('Simulado'),
+          '500': errorResponse('Simulado'),
+        },
       },
     },
   },

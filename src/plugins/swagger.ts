@@ -5,10 +5,13 @@ import { env } from '../config/env.js';
 import { openApiDocument } from '../openapi/document.js';
 
 const swaggerPlugin = fp(async (app) => {
+  // Modo estático: só a spec em src/openapi/document.ts (sem merge com rotas Fastify → evita tag "default")
   await app.register(fastifySwagger, {
-    // Spec estática — cast evita conflito de tipos literais do OpenAPI
-    openapi: openApiDocument as Record<string, unknown>,
-  });
+    mode: 'static',
+    specification: {
+      document: openApiDocument,
+    },
+  } as Parameters<typeof app.register>[1]);
 
   await app.register(fastifySwaggerUi, {
     routePrefix: '/docs',
@@ -16,6 +19,8 @@ const swaggerPlugin = fp(async (app) => {
       docExpansion: 'list',
       deepLinking: true,
       persistAuthorization: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
     },
     staticCSP: true,
   });
