@@ -56,6 +56,13 @@ const envSchema = z.object({
     (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
     z.string().min(1).optional(),
   ),
+
+  /** Expor Swagger UI em /docs (padrão: ligado em development). */
+  DOCS_ENABLED: z.preprocess((value) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return undefined;
+  }, z.boolean().optional()),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -76,3 +83,5 @@ function parseEnv(): Env {
 }
 
 export const env = parseEnv();
+
+export const docsEnabled = env.DOCS_ENABLED ?? env.NODE_ENV !== 'production';

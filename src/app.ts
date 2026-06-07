@@ -17,6 +17,8 @@ import { feedbackRoutes } from './routes/feedback.routes.js';
 import { adminRoutes } from './routes/admin.routes.js';
 import { healthRoutes } from './routes/health.routes.js';
 import observabilityPlugin from './plugins/observability.js';
+import swaggerPlugin from './plugins/swagger.js';
+import { docsEnabled } from './config/env.js';
 import { resolveClientErrorMessage, resolveClientErrorName } from './lib/safe-error-message.js';
 
 export async function buildApp() {
@@ -36,6 +38,10 @@ export async function buildApp() {
   await app.register(authPlugin);
   await app.register(observabilityPlugin);
   await app.register(securityPlugin);
+
+  if (docsEnabled) {
+    await app.register(swaggerPlugin);
+  }
 
   await app.register(healthRoutes);
 
