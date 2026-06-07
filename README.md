@@ -51,7 +51,7 @@ Aplicativo web para **organizar o álbum de figurinhas** da Copa do Mundo 2026 e
 ## Instalação rápida (Docker — recomendado)
 
 ```bash
-git clone <url-do-repo> sticker-trade
+git clone https://github.com/henr1queal/sticker-trade-backend
 cd sticker-trade/sticker-trade-backend   # ou nome do diretório do backend
 
 cp .env.example .env
